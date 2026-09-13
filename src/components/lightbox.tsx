@@ -91,7 +91,7 @@ export function Lightbox({ photos, clientName, tags, startIndex = 0, onClose }: 
         <Button
           variant="ghost"
           size="icon"
-          className="hidden text-white hover:text-white/80 sm:inline-flex"
+          className="text-white hover:text-white/80"
           onClick={goPrev}
         >
           <ChevronLeft className="h-8 w-8" />
@@ -111,7 +111,7 @@ export function Lightbox({ photos, clientName, tags, startIndex = 0, onClose }: 
         <Button
           variant="ghost"
           size="icon"
-          className="hidden text-white hover:text-white/80 sm:inline-flex"
+          className="text-white hover:text-white/80"
           onClick={goNext}
         >
           <ChevronRight className="h-8 w-8" />
