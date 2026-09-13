@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, type TouchEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import type { Photo } from "@/data/clients"
@@ -13,6 +13,11 @@ interface LightboxProps {
 
 export function Lightbox({ photos, clientName, tags, startIndex = 0, onClose }: LightboxProps) {
   const [current, setCurrent] = useState(startIndex)
+  const [dragX, setDragX] = useState(0)
+  const startX = useRef<number | null>(null)
+
+  const goNext = () => setCurrent((i) => (i < photos.length - 1 ? i + 1 : 0))
+  const goPrev = () => setCurrent((i) => (i > 0 ? i - 1 : photos.length - 1))
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -27,6 +32,24 @@ export function Lightbox({ photos, clientName, tags, startIndex = 0, onClose }: 
       document.body.style.overflow = ""
     }
   }, [photos.length, onClose])
+
+  const onTouchStart = (e: TouchEvent) => {
+    startX.current = e.touches[0].clientX
+  }
+
+  const onTouchMove = (e: TouchEvent) => {
+    if (startX.current === null) return
+    setDragX(e.touches[0].clientX - startX.current)
+  }
+
+  const onTouchEnd = () => {
+    if (startX.current === null) return
+    const delta = dragX
+    startX.current = null
+    if (delta < -60) goNext()
+    else if (delta > 60) goPrev()
+    setDragX(0)
+  }
 
   return (
     <div
@@ -58,12 +81,18 @@ export function Lightbox({ photos, clientName, tags, startIndex = 0, onClose }: 
         </div>
       </div>
 
-      <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="flex items-center gap-4"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <Button
           variant="ghost"
           size="icon"
-          className="text-white hover:text-white/80"
-          onClick={() => setCurrent((i) => (i > 0 ? i - 1 : photos.length - 1))}
+          className="hidden text-white hover:text-white/80 sm:inline-flex"
+          onClick={goPrev}
         >
           <ChevronLeft className="h-8 w-8" />
         </Button>
@@ -71,14 +100,19 @@ export function Lightbox({ photos, clientName, tags, startIndex = 0, onClose }: 
         <img
           src={photos[current].src}
           alt={clientName}
-          className="max-h-[80vh] max-w-[80vw] rounded-lg object-contain"
+          draggable={false}
+          className="max-h-[80vh] max-w-[80vw] touch-pan-y select-none rounded-lg object-contain"
+          style={{
+            transform: `translateX(${dragX}px)`,
+            transition: dragX === 0 ? "transform 0.2s ease-out" : "none",
+          }}
         />
 
         <Button
           variant="ghost"
           size="icon"
-          className="text-white hover:text-white/80"
-          onClick={() => setCurrent((i) => (i < photos.length - 1 ? i + 1 : 0))}
+          className="hidden text-white hover:text-white/80 sm:inline-flex"
+          onClick={goNext}
         >
           <ChevronRight className="h-8 w-8" />
         </Button>
